@@ -117,22 +117,22 @@ func (c *cache) Replace(k string, x interface{}, d time.Duration) error {
 
 // Get an item from the cache. Returns the item or nil, and a bool indicating
 // whether the key was found.
-func (c *cache) Get(k string) (interface{}, bool) {
+func (c *cache) Get(k string) (interface{}, error) {
 	c.mu.RLock()
 	// "Inlining" of get and Expired
 	item, found := c.items[k]
 	if !found {
 		c.mu.RUnlock()
-		return nil, false
+		return nil, fmt.Errorf("DNE")
 	}
 	if item.Expiration > 0 {
 		if time.Now().UnixNano() > item.Expiration {
 			c.mu.RUnlock()
-			return nil, false
+			return nil, fmt.Errorf("DNE")
 		}
 	}
 	c.mu.RUnlock()
-	return item.Object, true
+	return item.Object, nil
 }
 
 // GetWithExpiration returns an item and its expiration time from the cache.
